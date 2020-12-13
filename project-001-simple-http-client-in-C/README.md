@@ -11,11 +11,11 @@ gcc main.c -o simple-http-client
 
 <h4> usage </h4>
 
-```
+```bash
 ./simple-http-client
 usage: ./main $domain $port $method $path
 
-./simple-http-client www.facebook.com 80 GET /
-<INSERT GOOGLE HTML CODE HERE>
+./simple-http-client www.example.com 80 GET /
+<INSERT <example> HTML CODE HERE>
 ```
   
