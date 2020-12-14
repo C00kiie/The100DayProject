@@ -5,4 +5,4 @@ Serves as way to explore a new topic im interested into without spending much mo
 list of projects:
 
 - project-001-simple-http-client-in-C
-
+- project-002-exploit-boolean-based-injection
