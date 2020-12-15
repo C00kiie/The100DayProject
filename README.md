@@ -6,3 +6,4 @@ list of projects:
 
 - project-001-simple-http-client-in-C
 - project-002-exploit-boolean-based-injection
+- project-003-recurisve-links-scraper
