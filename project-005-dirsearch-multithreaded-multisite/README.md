@@ -1,4 +1,4 @@
-<h1> project 005: server-status-monitor </h1>
+<h1> project 005: project-005-dirsearch-multithreaded-multisite </h1>
 
  brute force directories of multiple sites with 1 dictionary, for lazy late-night scanners
 <h4> usage </h4>
