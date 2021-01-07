@@ -6,6 +6,9 @@ import re
 import time
 import sys
 
+# suppress SSL warnings if any
+requests.packages.urllib3.disable_warnings()
+
 '''
 regex section
 '''

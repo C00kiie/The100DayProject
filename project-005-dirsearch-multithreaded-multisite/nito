@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+
+import logging
+import os
+from queue import Queue
+from threading import Thread
+from threading import Event
+import requests
+import re
+
+
+results = {
+       # "http://www.example.com": "response_code_goes_here",
+}
+
+# suppress SSL error
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+class enumeration_worker(Thread):
+
+    def __init__(self, queue, accepted_http_flags, timeout=10, proxy=None):
+        self.queue = queue
+        Thread.queue = queue
+        self.timeout = timeout
+        Thread.__init__(self)
+        self.proxy = proxy
+        self.flags = accepted_http_flags
+
+    def run(self):
+        while True:
+            link, path = self.queue.get()
+            if link == -1:
+                return
+            try:
+                full_link = link + '/' +  path
+                url, response = check_response(full_link, self.timeout,self.proxy)
+                if response in self.flags:
+                    print("[*] {0} ({1})".format(url,response))
+            finally:
+                self.queue.task_done()
+
+def check_response(link, timeout=10,proxy=None):
+    proxies = {
+            'http': 'http://127.0.0.1:8080',
+            'https': 'http://127.0.0.1:8080',
+            }
+    if proxy != None:
+        proxies['http'] = proxy
+        proxies['https'] = proxy
+    try:
+        if proxy != None:
+            req =  requests.get(link, verify=False, proxies=proxies) # ignore ssl errors
+            return (req.url, req.status_code)
+        else:
+            req =  requests.get(link, verify=False ) # ignore ssl errors
+            return (req.url, req.status_code)
+    except requests.exceptions.Timeout:
+        pass
+    except requests.exceptions.InvalidProxyURL:
+        print("Invalid proxy");
+        exit;
+    except requests.exceptions.ConnectionError:
+        print("Couldn't connect to target: {}".format(link))
+
+
+def parse_urls(file_handle):
+    regex = "https?:\/\/.*" # parse urls from the list that only matches the schema
+    links_arr = file_handle.readlines()
+    valid_urls = []
+    for each_link in links_arr:
+        if re.match(regex, each_link):
+            valid_urls.append(each_link.replace("\n",""))
+        else:
+            print("Invalid scheme: {}".format(each_link))
+    return valid_urls
+
+
+def parse_dictionary(file_handle):
+    lines = file_handle.readlines();
+    c = 0
+    for each_line in lines:
+        lines[c] = lines[c].replace("\n","");c+=1;
+    return lines
+
+def log_output(file_handle, output):
+    file_handle.write(output)
+
+
+stopping = Event()
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Multi sites directory scanner, for lazy prople and latenight scans')
+    parser.add_argument('urls', type=argparse.FileType('r'),
+                        help='urls file')
+    parser.add_argument('wordlist', type=argparse.FileType('r'),
+                        help='the used wordlist to enumerate the urls')
+    parser.add_argument("--threads", type=int, default=8,
+                        help='number of Threads, default = 8')
+    parser.add_argument("--timeout", type=int, default=10,
+                        help="Timeout period")
+    parser.add_argument("--proxy", type=str, default=None, help="use a proxy")
+    parser.add_argument("--httpcodes", type=int, nargs='+', default=[200,204,301,302,307,403],
+                        help = "List of http codes separated by spaces that you'd like to show up")
+
+
+
+
+    queue = Queue();
+
+
+    # parsing up the arguments
+    args = parser.parse_args()
+   
+
+    url = args.urls
+    valid_urls = parse_urls(url)
+    if len(valid_urls) < 1 :
+        exit("No urls found")
+    print("Found {0} valid urls".format(len(valid_urls)))
+    
+    wordlist = args.wordlist
+    wordlist_arr = parse_dictionary(wordlist)
+    
+    threads = args.threads if args.threads > 0 else 8
+    
+    timeout = args.timeout if args.timeout > 0 else 10
+    
+    proxy = args.proxy if args.proxy != None else None
+    
+    accepted_http_flags = args.httpcodes
+    
+
+    for x in range(threads):
+        worker = enumeration_worker(queue, timeout=timeout, proxy=proxy, accepted_http_flags=accepted_http_flags)
+        worker.setDaemon = True
+        worker.start()
+
+    for link in valid_urls:
+        for each_word in wordlist_arr:
+            queue.put((link, each_word))
+            #print((link,each_word))
+    queue.join(); 
+
+    finishUp = True  # let the workers know that they can exit
+    print ("finished")
+    # send kill signal
+    for i in range(threads):
+        queue.put((-1,-1))
+    #for i in res
+if __name__ == '__main__':
+    main()

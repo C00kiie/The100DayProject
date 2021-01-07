@@ -8,3 +8,4 @@ list of projects:
 - project-002-exploit-boolean-based-injection
 - project-003-recurisve-links-scraper
 - project-004-server-status-monitor
+- project-005-dirsearch-multithreaded-multisite
