@@ -11,3 +11,4 @@ list of projects:
 - project-005-dirsearch-multithreaded-multisite
 - project-006-linked-list
 - project-007-binary-tree-data-strucutre-
+- project-008-euler-project-problem-1
